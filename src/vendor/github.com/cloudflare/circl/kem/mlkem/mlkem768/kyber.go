@@ -1,10 +1,13 @@
 // Code generated from pkg.templ.go. DO NOT EDIT.
 
-// Package kyber768 implements the IND-CCA2 secure key encapsulation mechanism
+// Package mlkem768 implements the IND-CCA2 secure key encapsulation mechanism
 
-// Kyber768.CCAKEM as defined in FIPS203.
+// ML-KEM-768 as submitted to round 3 of the NIST PQC competition and
+// described in
+//
+// https://pq-crystals.org/kyber/data/kyber-specification-round3.pdf
 
-package kyber768
+package mlkem768
 
 import (
 	"bytes"
@@ -37,14 +40,14 @@ const (
 	PrivateKeySize = cpapke.PrivateKeySize + cpapke.PublicKeySize + 64
 )
 
-// Type of a Kyber768.CCAKEM public key
+// Type of a ML-KEM-768 public key
 type PublicKey struct {
 	pk *cpapke.PublicKey
 
 	hpk [32]byte // H(pk)
 }
 
-// Type of a Kyber768.CCAKEM private key
+// Type of a ML-KEM-768 private key
 type PrivateKey struct {
 	sk  *cpapke.PrivateKey
 	pk  *cpapke.PublicKey
@@ -124,10 +127,7 @@ func (pk *PublicKey) EncapsulateTo(ct, ss []byte, seed []byte) {
 
 	var m [32]byte
 
-	// m = H(seed), the hash of shame
-	h := sha3.New256()
-	h.Write(seed)
-	h.Read(m[:])
+	copy(m[:], seed)
 
 	// (K', r) = G(m ‖ H(pk))
 	var kr [64]byte
@@ -139,15 +139,7 @@ func (pk *PublicKey) EncapsulateTo(ct, ss []byte, seed []byte) {
 	// c = Kyber.CPAPKE.Enc(pk, m, r)
 	pk.pk.EncryptTo(ct, m[:], kr[32:])
 
-	// Compute H(c) and put in second slot of kr, which will be (K', H(c)).
-	h.Reset()
-	h.Write(ct[:CiphertextSize])
-	h.Read(kr[32:])
-
-	// K = KDF(K' ‖ H(c))
-	kdf := sha3.NewShake256()
-	kdf.Write(kr[:])
-	kdf.Read(ss[:SharedKeySize])
+	copy(ss, kr[:SharedKeySize])
 
 }
 
@@ -180,22 +172,22 @@ func (sk *PrivateKey) DecapsulateTo(ss, ct []byte) {
 	var ct2 [CiphertextSize]byte
 	sk.pk.EncryptTo(ct2[:], m2[:], kr2[32:])
 
-	// Compute H(c) and put in second slot of kr2, which will be (K'', H(c)).
-	h := sha3.New256()
-	h.Write(ct[:CiphertextSize])
-	h.Read(kr2[32:])
+	var ss2 [SharedKeySize]byte
 
-	// Replace K'' by  z in the first slot of kr2 if c ≠ c'.
+	// Compute shared secret in case of rejection: ss₂ = PRF(z ‖ c)
+	prf := sha3.NewShake256()
+	prf.Write(sk.z[:])
+	prf.Write(ct[:CiphertextSize])
+	prf.Read(ss2[:])
+
+	// Set ss2 to the real shared secret if c = c'.
 	subtle.ConstantTimeCopy(
-		1-subtle.ConstantTimeCompare(ct, ct2[:]),
-		kr2[:32],
-		sk.z[:],
+		subtle.ConstantTimeCompare(ct, ct2[:]),
+		ss2[:],
+		kr2[:SharedKeySize],
 	)
 
-	// K = KDF(K''/z, H(c))
-	kdf := sha3.NewShake256()
-	kdf.Write(kr2[:])
-	kdf.Read(ss[:SharedKeySize])
+	copy(ss[:SharedKeySize], ss2[:])
 
 }
 
@@ -271,7 +263,7 @@ var sch kem.Scheme = &scheme{}
 // Scheme returns a KEM interface.
 func Scheme() kem.Scheme { return sch }
 
-func (*scheme) Name() string               { return "Kyber768" }
+func (*scheme) Name() string               { return "ML-KEM-768" }
 func (*scheme) PublicKeySize() int         { return PublicKeySize }
 func (*scheme) PrivateKeySize() int        { return PrivateKeySize }
 func (*scheme) SeedSize() int              { return KeySeedSize }

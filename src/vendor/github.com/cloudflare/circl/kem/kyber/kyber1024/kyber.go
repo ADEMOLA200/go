@@ -1,10 +1,9 @@
 // Code generated from pkg.templ.go. DO NOT EDIT.
 
 // Package kyber1024 implements the IND-CCA2 secure key encapsulation mechanism
-// Kyber1024.CCAKEM as submitted to round 3 of the NIST PQC competition and
-// described in
-//
-// https://pq-crystals.org/kyber/data/kyber-specification-round3.pdf
+
+// Kyber1024.CCAKEM as defined in FIPS203.
+
 package kyber1024
 
 import (
@@ -123,10 +122,11 @@ func (pk *PublicKey) EncapsulateTo(ct, ss []byte, seed []byte) {
 		panic("ss must be of length SharedKeySize")
 	}
 
-	// m = H(seed)
 	var m [32]byte
+
+	// m = H(seed), the hash of shame
 	h := sha3.New256()
-	h.Write(seed[:])
+	h.Write(seed)
 	h.Read(m[:])
 
 	// (K', r) = G(m ‖ H(pk))
@@ -148,6 +148,7 @@ func (pk *PublicKey) EncapsulateTo(ct, ss []byte, seed []byte) {
 	kdf := sha3.NewShake256()
 	kdf.Write(kr[:])
 	kdf.Read(ss[:SharedKeySize])
+
 }
 
 // DecapsulateTo computes the shared key which is encapsulated in ct
@@ -195,6 +196,7 @@ func (sk *PrivateKey) DecapsulateTo(ss, ct []byte) {
 	kdf := sha3.NewShake256()
 	kdf.Write(kr2[:])
 	kdf.Read(ss[:SharedKeySize])
+
 }
 
 // Packs sk to buf.

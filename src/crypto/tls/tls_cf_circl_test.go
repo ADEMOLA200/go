@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/cloudflare/circl/sign"
-	"github.com/cloudflare/circl/sign/eddilithium3"
+	"github.com/cloudflare/circl/sign/eddilithium2"
 )
 
 func TestPQSignatureSchemes(t *testing.T) {
-	pqCert := createPQCert(t, eddilithium3.Scheme())
+	pqCert := createPQCert(t, eddilithium2.Scheme())
 	rsaCert := Certificate{
 		Certificate: [][]byte{testRSACertificate},
 		PrivateKey:  testRSAPrivateKey,
@@ -47,13 +47,13 @@ func TestPQSignatureSchemes(t *testing.T) {
 			clientPQ:           true,
 			serverPQ:           false,
 			serverCerts:        pqAndRsaCerts,
-			expectedCertSigAlg: x509.PureEdDilithium3,
+			expectedCertSigAlg: x509.PureEdDilithium2,
 		},
 		{
 			clientPQ:           true,
 			serverPQ:           true,
 			serverCerts:        pqAndRsaCerts,
-			expectedCertSigAlg: x509.PureEdDilithium3,
+			expectedCertSigAlg: x509.PureEdDilithium2,
 		},
 		{
 			clientPQ:           true,

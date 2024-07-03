@@ -190,6 +190,7 @@ const (
 	signatureRSAPSS
 	signatureECDSA
 	signatureEd25519
+	signatureEdDilithium2
 	signatureEdDilithium3
 )
 

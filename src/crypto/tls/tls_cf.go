@@ -6,6 +6,7 @@ package tls
 import (
 	circlPki "github.com/cloudflare/circl/pki"
 	circlSign "github.com/cloudflare/circl/sign"
+	"github.com/cloudflare/circl/sign/eddilithium2"
 	"github.com/cloudflare/circl/sign/eddilithium3"
 )
 
@@ -20,6 +21,7 @@ var circlSchemes = [...]struct {
 	sigType uint8
 	scheme  circlSign.Scheme
 }{
+	{signatureEdDilithium2, eddilithium2.Scheme()},
 	{signatureEdDilithium3, eddilithium3.Scheme()},
 }
 

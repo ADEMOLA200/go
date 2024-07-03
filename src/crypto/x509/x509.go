@@ -241,6 +241,7 @@ const (
 	SHA384WithRSAPSS
 	SHA512WithRSAPSS
 	PureEd25519
+	PureEdDilithium2
 	PureEdDilithium3
 )
 
@@ -270,6 +271,7 @@ const (
 	DSA // Only supported for parsing.
 	ECDSA
 	Ed25519
+	EdDilithium2
 	EdDilithium3
 )
 
@@ -278,7 +280,8 @@ var publicKeyAlgoName = [...]string{
 	DSA:          "DSA",
 	ECDSA:        "ECDSA",
 	Ed25519:      "Ed25519",
-	EdDilithium3: "Ed25519-Dilithium3",
+	EdDilithium2: "Ed25519-Dilithium2",
+	EdDilithium3: "Ed448-Dilithium3",
 }
 
 func (algo PublicKeyAlgorithm) String() string {
